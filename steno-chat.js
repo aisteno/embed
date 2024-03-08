@@ -3,6 +3,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const chatId = chatScript?.getAttribute('data-id') || 'default';
     const chatOrigin = chatScript?.getAttribute('data-origin') || '';
     const chatUrl = chatScript?.getAttribute('data-url') || 'https://chat.steno.ai';
+    const chatPosition = chatScript?.getAttribute('data-position') || 'right';
 
     // Validate the chatUrl
     const allowedUrls = ['https://chat.steno.ai', 'https://devchat.steno.ai'];
@@ -18,8 +19,8 @@ document.addEventListener("DOMContentLoaded", () => {
         chatIframe.id = 'chat-iframe';
         chatIframe.src = chatIframeSrc;
         chatIframe.style.position = 'fixed';
+        chatIframe.style[chatPosition === 'left' ? 'left' : 'right'] = '0';
         chatIframe.style.bottom = '0';
-        chatIframe.style.right = '0';
         chatIframe.style.zIndex = '9999';
         chatIframe.style.border = 'none';
         chatIframe.style.width = '80px';

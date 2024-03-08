@@ -7,7 +7,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Validate the chatUrl
     const allowedUrls = ['https://chat.steno.ai', 'https://devchat.steno.ai'];
     if (!allowedUrls.includes(chatUrl)) {
-        console.error('Invalid chat URL. Allowed URLs are: ' + allowedUrls.join(', '));
+        console.error('Steno Chat - Invalid chat URL. Allowed URLs are: ' + allowedUrls.join(', '));
         return;
     }
 
@@ -27,11 +27,6 @@ document.addEventListener("DOMContentLoaded", () => {
         document.body.appendChild(chatIframe);
 
         window.addEventListener("message", event => {
-            // Check if the event origin is one of the allowed URLs
-            if (!allowedUrls.includes(event.origin)) {
-                console.error('Invalid event origin. Allowed origins are: ' + allowedUrls.join(', '));
-                return;
-            }
             switch (event.data.action) {
                 case "navigate":
                     window.open(event.data.url, "_blank");
@@ -49,3 +44,5 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 });
+
+

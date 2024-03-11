@@ -1,4 +1,4 @@
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("steno-chat-loaded", () => {
     const chatScript = document.querySelector('script[src$="steno-chat.js"]');
     const chatId = chatScript?.getAttribute('data-id') || 'default';
     const chatOrigin = chatScript?.getAttribute('data-origin') || '';

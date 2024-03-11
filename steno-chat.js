@@ -31,7 +31,12 @@
             chatIframe.style.width = '80px';
             chatIframe.style.height = '80px';
             document.body.appendChild(chatIframe);
+            chatIframe.setAttribute('allowTransparency', 'true');
             stenoChatLoaded = true;
+
+            chatIframe.onload = function () {
+                chatIframe.contentDocument.body.style.backgroundColor = 'transparent';
+            };
 
             window.addEventListener("message", event => {
                 switch (event.data.action) {

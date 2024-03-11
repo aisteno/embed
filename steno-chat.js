@@ -3,6 +3,7 @@
 
     function initStenoChat() {
         if (stenoChatLoaded) return;
+        stenoChatLoaded = true;
 
         const chatScript = document.querySelector('script[src$="steno-chat.js"]');
         const chatId = chatScript?.getAttribute('data-id') || 'default';
@@ -32,7 +33,6 @@
             chatIframe.style.height = '80px';
             document.body.appendChild(chatIframe);
             chatIframe.setAttribute('allowTransparency', 'true');
-            stenoChatLoaded = true;
 
             chatIframe.onload = function () {
                 chatIframe.contentDocument.body.style.backgroundColor = 'transparent';

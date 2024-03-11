@@ -57,7 +57,5 @@
         }
     }
 
-    // handle the case where the script is loaded after the DOMContentLoaded event (e.g. React, Vue, etc.)
-    document.addEventListener("steno-chat-loaded", initStenoChat);
     document.addEventListener("DOMContentLoaded", initStenoChat);
 })();

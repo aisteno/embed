@@ -33,10 +33,7 @@
             chatIframe.style.height = '80px';
             document.body.appendChild(chatIframe);
             chatIframe.setAttribute('allowTransparency', 'true');
-
-            chatIframe.onload = function () {
-                chatIframe.contentDocument.body.style.backgroundColor = 'transparent';
-            };
+            chatIframe.setAttribute('allow', 'autoplay; clipboard-write; encrypted-media *; fullscreen; picture-in-picture');
 
             window.addEventListener("message", event => {
                 switch (event.data.action) {

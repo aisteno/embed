@@ -1,10 +1,8 @@
 (function () {
     let stenoChatLoaded = false;
-
     function initStenoChat() {
         if (stenoChatLoaded) return;
         stenoChatLoaded = true;
-
         const chatScript = document.querySelector('script[src$="steno-chat.js"]');
         const chatId = chatScript?.getAttribute('data-id') || 'default';
         const chatOrigin = chatScript?.getAttribute('data-origin') || '';
@@ -18,24 +16,33 @@
             return;
         }
 
-        const chatIframeSrc = `${chatUrl}/chat?id=${chatId}&origin=${chatOrigin}`;
-
+        const chatIframeSrc = `${chatUrl}/chat?id=${chatId}&origin=${chatOrigin}&position=${chatPosition}`;
         if (chatIframeSrc) {
             const chatIframe = document.createElement('iframe');
             chatIframe.id = 'chat-iframe';
             chatIframe.src = chatIframeSrc;
             chatIframe.style.position = 'fixed';
-            chatIframe.style[chatPosition === 'left' ? 'left' : 'right'] = '0';
             chatIframe.style.bottom = '0';
             chatIframe.style.zIndex = '9999';
             chatIframe.style.border = 'none';
-            chatIframe.style.width = '80px';
-            chatIframe.style.height = '80px';
+
+            if (chatPosition === 'center') {
+                chatIframe.style.left = '50%';
+                chatIframe.style.transform = 'translateX(-50%)';
+                chatIframe.style.width = '330px';
+                chatIframe.style.height = '80px';
+            } else {
+                chatIframe.style[chatPosition === 'left' ? 'left' : 'right'] = '0';
+                chatIframe.style.width = '80px';
+                chatIframe.style.height = '80px';
+            }
+
             document.body.appendChild(chatIframe);
             chatIframe.setAttribute('allowTransparency', 'true');
             chatIframe.setAttribute('allow', 'autoplay; clipboard-write; encrypted-media *; fullscreen; picture-in-picture; microphone *;');
 
             window.addEventListener("message", event => {
+
                 switch (event.data.action) {
                     case "navigate":
                         window.open(event.data.url, "_blank");
@@ -43,7 +50,7 @@
                     case "resize":
                         if (!event.data.width || !event.data.height) return;
                         const { width, height } = event.data;
-                        const isMobile = (window.innerWidth <= 500 ?? window.innerHeight <= 1000) && width !== "80px" && height !== "80px";
+                        const isMobile = (window.innerWidth <= 500 ?? window.innerHeight <= 1000) && width !== "80px" && height !== "80px" && width !== "330px";
                         chatIframe.style.width = isMobile ? "100%" : width;
                         chatIframe.style.height = isMobile ? "100%" : height;
                         break;
@@ -53,6 +60,5 @@
             });
         }
     }
-
     document.addEventListener("DOMContentLoaded", initStenoChat);
 })();

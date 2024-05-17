@@ -37,9 +37,9 @@
                 chatIframe.style.height = '80px';
             }
 
-            document.body.appendChild(chatIframe);
             chatIframe.setAttribute('allowTransparency', 'true');
             chatIframe.setAttribute('allow', 'autoplay; clipboard-write; encrypted-media *; fullscreen; picture-in-picture; microphone *;');
+            document.body.appendChild(chatIframe);
 
             window.addEventListener("message", event => {
 

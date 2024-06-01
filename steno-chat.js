@@ -10,7 +10,7 @@
         const chatPosition = chatScript?.getAttribute('data-position') || 'right';
 
         // Validate the chatUrl
-        const allowedUrls = ['https://chat.steno.ai', 'https://devchat.steno.ai'];
+        const allowedUrls = ['https://chat.steno.ai', 'https://devchat.steno.ai', 'https://chat.rpmplanner.com'];
         if (!allowedUrls.includes(chatUrl)) {
             console.error('Steno Chat - Invalid chat URL. Allowed URLs are: ' + allowedUrls.join(', '));
             return;

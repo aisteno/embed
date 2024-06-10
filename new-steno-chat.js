@@ -2,7 +2,7 @@
     let stenoChatLoaded = false;
 
     function initStenoChat() {
-        if (stenoChatLoaded || document.readyState !== "interactive") return;
+        if (stenoChatLoaded || document.readyState !== "interactive" || document.readyState !== "complete") return;
         stenoChatLoaded = true;
 
         const chatScript = document.querySelector('script[src$="steno-chat.js"]');
@@ -47,7 +47,7 @@
         if (actions[event.data.action]) actions[event.data.action]();
     }
 
-    if (document.readyState === "interactive") {
+    if (document.readyState === "interactive" || document.readyState === "complete") {
         initStenoChat();
     } else {
         window.addEventListener("load", initStenoChat);

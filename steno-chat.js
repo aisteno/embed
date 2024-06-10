@@ -1,7 +1,7 @@
 (function () {
     let stenoChatLoaded = false;
     function initStenoChat() {
-        if (stenoChatLoaded) return;
+        if (stenoChatLoaded || (document.readyState !== "interactive" && document.readyState !== "complete")) return;
         stenoChatLoaded = true;
         const chatScript = document.querySelector('script[src$="steno-chat.js"]');
         const chatId = chatScript?.getAttribute('data-id') || 'default';
@@ -60,5 +60,10 @@
             });
         }
     }
-    document.addEventListener("DOMContentLoaded", initStenoChat);
+
+    if (document.readyState === "interactive" || document.readyState === "complete") {
+        initStenoChat();
+    } else {
+        window.addEventListener("load", initStenoChat);
+    }
 })();

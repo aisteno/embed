@@ -17,8 +17,12 @@
         }
 
         const chatIframeSrc = `${chatUrl}/chat?id=${chatId}&origin=${chatOrigin}&position=${chatPosition}`;
+
+        let chatIframe = document.getElementById('chat-iframe');
+        if (chatIframe) return;
+
         if (chatIframeSrc) {
-            const chatIframe = document.createElement('iframe');
+            chatIframe = document.createElement('iframe');
             chatIframe.id = 'chat-iframe';
             chatIframe.src = chatIframeSrc;
             chatIframe.style.position = 'fixed';
@@ -64,6 +68,6 @@
     if (document.readyState === "interactive" || document.readyState === "complete") {
         initStenoChat();
     } else {
-        window.addEventListener("load", initStenoChat);
+        window.addEventListener("DOMContentLoaded", initStenoChat);
     }
 })();

@@ -1,8 +1,8 @@
 (function () {
-    let stenoChatLoaded = false;
     function initStenoChat() {
-        if (stenoChatLoaded || (document.readyState !== "interactive" && document.readyState !== "complete")) return;
-        stenoChatLoaded = true;
+        let chatIframe = document.getElementById('chat-iframe');
+        if (chatIframe) return; // Check if the chat iframe already exists to avoid duplication
+
         const chatScript = document.querySelector('script[src$="steno-chat.js"]');
         const chatId = chatScript?.getAttribute('data-id') || 'default';
         const chatOrigin = chatScript?.getAttribute('data-origin') || '';
@@ -17,9 +17,6 @@
         }
 
         const chatIframeSrc = `${chatUrl}/chat?id=${chatId}&origin=${chatOrigin}&position=${chatPosition}`;
-
-        let chatIframe = document.getElementById('chat-iframe');
-        if (chatIframe) return;
 
         if (chatIframeSrc) {
             chatIframe = document.createElement('iframe');
@@ -46,7 +43,6 @@
             document.body.appendChild(chatIframe);
 
             window.addEventListener("message", event => {
-
                 switch (event.data.action) {
                     case "navigate":
                         window.open(event.data.url, "_blank");

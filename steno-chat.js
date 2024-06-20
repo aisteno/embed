@@ -26,7 +26,7 @@
             chatIframe.style.bottom = '0';
             chatIframe.style.zIndex = '9999';
             chatIframe.style.border = 'none';
-            chatIframe.style.backgroundColor = rgba(255, 255, 255, 0);
+            chatIframe.style.colorScheme = 'normal';
 
             if (chatPosition === 'center') {
                 chatIframe.style.left = '50%';

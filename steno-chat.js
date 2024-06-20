@@ -27,6 +27,7 @@
             chatIframe.style.zIndex = '9999';
             chatIframe.style.border = 'none';
             chatIframe.style.colorScheme = 'only dark';
+            chatIframe.style.overflow = 'hidden';
 
             if (chatPosition === 'center') {
                 chatIframe.style.left = '50%';
@@ -40,6 +41,7 @@
             }
 
             chatIframe.setAttribute('allow', 'autoplay; clipboard-write; encrypted-media *; fullscreen; picture-in-picture; microphone *;');
+            chatIframe.setAttribute('scrolling', 'no');
             document.body.appendChild(chatIframe);
 
             window.addEventListener("message", event => {

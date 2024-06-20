@@ -26,7 +26,7 @@
             chatIframe.style.bottom = '0';
             chatIframe.style.zIndex = '9999';
             chatIframe.style.border = 'none';
-            chatIframe.style.colorScheme = 'light dark';
+            chatIframe.style.colorScheme = 'only dark';
 
             if (chatPosition === 'center') {
                 chatIframe.style.left = '50%';

@@ -40,7 +40,7 @@
                 chatIframe.style.height = '80px';
             }
 
-            chatIframe.setAttribute('allow', 'autoplay; clipboard-write; clipboard-read *; encrypted-media *; fullscreen; picture-in-picture; microphone *;');
+            chatIframe.setAttribute('allow', 'autoplay; clipboard-write *; clipboard-read *; encrypted-media *; fullscreen; picture-in-picture; microphone *;');
             chatIframe.setAttribute('scrolling', 'no');
             document.body.appendChild(chatIframe);
 

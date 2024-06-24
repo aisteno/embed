@@ -23,7 +23,7 @@
             chatIframe.id = 'chat-iframe';
             chatIframe.src = chatIframeSrc;
             chatIframe.style.position = 'fixed';
-            chatIframe.style.bottom = '10px';
+            chatIframe.style.bottom = '5px';
             chatIframe.style.zIndex = '9999';
             chatIframe.style.border = 'none';
             chatIframe.style.colorScheme = 'only dark';

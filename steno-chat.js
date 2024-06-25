@@ -8,6 +8,7 @@
         const chatOrigin = chatScript?.getAttribute('data-origin') || '';
         const chatUrl = chatScript?.getAttribute('data-url') || 'https://chat.steno.ai';
         const chatPosition = chatScript?.getAttribute('data-position') || 'right';
+        const chatMode = chatScript?.getAttribute('data-mode') || 'default';
 
         // Validate the chatUrl
         const allowedUrls = ['https://chat.steno.ai', 'https://devchat.steno.ai', 'https://chat.rpmplanner.com'];
@@ -16,7 +17,7 @@
             return;
         }
 
-        const chatIframeSrc = `${chatUrl}/chat?id=${chatId}&origin=${chatOrigin}&position=${chatPosition}`;
+        const chatIframeSrc = `${chatUrl}/chat?id=${chatId}&origin=${chatOrigin}&position=${chatPosition}&mode=${chatMode}`;
 
         if (chatIframeSrc) {
             chatIframe = document.createElement('iframe');

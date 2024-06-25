@@ -23,7 +23,7 @@
             chatIframe.id = 'chat-iframe';
             chatIframe.src = chatIframeSrc;
             chatIframe.style.position = 'fixed';
-            chatIframe.style.bottom = '5px';
+            chatIframe.style.bottom = '0';
             chatIframe.style.zIndex = '9999';
             chatIframe.style.border = 'none';
             chatIframe.style.colorScheme = 'only dark';
@@ -35,7 +35,7 @@
                 chatIframe.style.width = '330px';
                 chatIframe.style.height = '80px';
             } else {
-                chatIframe.style[chatPosition === 'left' ? 'left' : 'right'] = '10px';
+                chatIframe.style[chatPosition === 'left' ? 'left' : 'right'] = '0';
                 chatIframe.style.width = '80px';
                 chatIframe.style.height = '80px';
             }

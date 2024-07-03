@@ -11,7 +11,7 @@
         const chatMode = chatScript?.getAttribute('data-mode') || 'default';
 
         // Validate the chatUrl
-        const allowedUrls = ['https://chat.steno.ai', 'https://devchat.steno.ai', 'https://chat.rpmplanner.com'];
+        const allowedUrls = ['https://chat.steno.ai', 'https://devchat.steno.ai', 'https://chat.rpmplanner.com', 'https://dev-chat.rpmplanner.com', 'https://exp-chat.rpmplanner.com'];
         if (!allowedUrls.includes(chatUrl)) {
             console.error('Steno Chat - Invalid chat URL. Allowed URLs are: ' + allowedUrls.join(', '));
             return;

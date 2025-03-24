@@ -22,24 +22,14 @@
             CONFIG.ALLOWED_URLS.some(allowed => new URL(url).origin === new URL(allowed).origin);
     }
 
-    function parseCookieValue(cookieName) {
+    function getCookieValue(cookieName) {
         const match = document.cookie.match(new RegExp(`(^|;\\s*)${cookieName}=([^;]+)`));
         return match ? decodeURIComponent(match[2]) : null;
     }
 
-    function extractUserIdFromCookie(cookieValue) {
-        try {
-            const parsed = JSON.parse(cookieValue);
-            return parsed.siteUserId || null;
-        } catch (err) {
-            console.error('Failed to parse cookie JSON:', err);
-            return null;
-        }
-    }
-
-    function setTopLevelCookie(userId, domain) {
-        if (!userId || !domain) return;
-        const cookieStr = `StenoUserId=${encodeURIComponent(userId)}; path=/; domain=${domain}; secure; samesite=lax`;
+    function setTopLevelCookie(cookieValue, domain) {
+        if (!cookieValue || !domain) return;
+        const cookieStr = `StenoInfo=${encodeURIComponent(cookieValue)}; path=/; domain=${domain}; secure; samesite=lax`;
         document.cookie = cookieStr;
     }
 
@@ -50,14 +40,13 @@
         }
 
         const chatScript = document.querySelector('script[src$="steno-chat.js"]');
-
         const sourceCookieName = chatScript?.getAttribute('data-cookie-name');
         const targetCookieDomain = chatScript?.getAttribute('data-cookie-domain');
 
+        // Read source cookie and write StenoInfo cookie if both params are set
         if (sourceCookieName && targetCookieDomain) {
-            const cookieValue = parseCookieValue(sourceCookieName);
-            const userId = extractUserIdFromCookie(cookieValue);
-            setTopLevelCookie(userId, targetCookieDomain);
+            const rawCookieValue = getCookieValue(sourceCookieName);
+            setTopLevelCookie(rawCookieValue, targetCookieDomain);
         }
 
         let chatIframe = document.getElementById('chat-iframe');
@@ -80,7 +69,7 @@
         if (chatMode) params.append('mode', chatMode);
         if (chatBackend) params.append('backend', chatBackend);
 
-        const chatIframeSrc = `${chatUrl}/?${params.toString()}`;
+        const chatIframeSrc = `${chatUrl}/chat?${params.toString()}`;
 
         if (chatIframeSrc) {
             chatIframe = document.createElement('iframe');

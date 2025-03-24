@@ -22,24 +22,24 @@
             CONFIG.ALLOWED_URLS.some(allowed => new URL(url).origin === new URL(allowed).origin);
     }
 
-    function getSiteUserInfo() {
-        const match = document.cookie.match(/(^|;\s*)SiteUserInfo=([^;]+)/);
-        if (!match) return null;
+    function parseCookieValue(cookieName) {
+        const match = document.cookie.match(new RegExp(`(^|;\\s*)${cookieName}=([^;]+)`));
+        return match ? decodeURIComponent(match[2]) : null;
+    }
 
+    function extractUserIdFromCookie(cookieValue) {
         try {
-            return JSON.parse(decodeURIComponent(match[2]));
+            const parsed = JSON.parse(cookieValue);
+            return parsed.siteUserId || null;
         } catch (err) {
-            console.error('Error parsing SiteUserInfo cookie:', err);
+            console.error('Failed to parse cookie JSON:', err);
             return null;
         }
     }
 
-    function setSharedCookie(cookieName, cookieDomain) {
-        const info = getSiteUserInfo();
-        if (!info || !info.siteUserId) return;
-
-        const userId = encodeURIComponent(info.siteUserId);
-        const cookieStr = `${cookieName}=${userId}; path=/; domain=${cookieDomain}; secure; samesite=lax`;
+    function setTopLevelCookie(userId, domain) {
+        if (!userId || !domain) return;
+        const cookieStr = `StenoUserId=${encodeURIComponent(userId)}; path=/; domain=${domain}; secure; samesite=lax`;
         document.cookie = cookieStr;
     }
 
@@ -51,13 +51,13 @@
 
         const chatScript = document.querySelector('script[src$="steno-chat.js"]');
 
-        // Read optional cookie settings
-        const cookieName = chatScript?.getAttribute('data-cookie-name');
-        const cookieDomain = chatScript?.getAttribute('data-cookie-domain');
+        const sourceCookieName = chatScript?.getAttribute('data-cookie-name');
+        const targetCookieDomain = chatScript?.getAttribute('data-cookie-domain');
 
-        // Only set cookie if both parameters are provided
-        if (cookieName && cookieDomain) {
-            setSharedCookie(cookieName, cookieDomain);
+        if (sourceCookieName && targetCookieDomain) {
+            const cookieValue = parseCookieValue(sourceCookieName);
+            const userId = extractUserIdFromCookie(cookieValue);
+            setTopLevelCookie(userId, targetCookieDomain);
         }
 
         let chatIframe = document.getElementById('chat-iframe');
@@ -80,10 +80,11 @@
         if (chatMode) params.append('mode', chatMode);
         if (chatBackend) params.append('backend', chatBackend);
 
-        const chatIframeSrc = `${chatUrl}/chat?${params.toString()}`;
+        const chatIframeSrc = `${chatUrl}/?${params.toString()}`;
 
         if (chatIframeSrc) {
             chatIframe = document.createElement('iframe');
+
             chatIframe.id = 'chat-iframe';
             chatIframe.setAttribute('title', 'Steno Chat Support Widget');
             chatIframe.setAttribute('aria-hidden', 'true');

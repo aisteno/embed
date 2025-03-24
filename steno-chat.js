@@ -1,5 +1,4 @@
 (function () {
-    // Add crawler detection
     function isCrawler() {
         return /bot|crawler|spider|crawling/i.test(navigator.userAgent);
     }
@@ -18,30 +17,58 @@
         MOBILE_BREAKPOINT: 500
     };
 
-    // Improve URL validation with pattern matching
     function isValidChatUrl(url) {
         return CONFIG.ALLOWED_URLS.includes(url) ||
             CONFIG.ALLOWED_URLS.some(allowed => new URL(url).origin === new URL(allowed).origin);
     }
 
+    function getSiteUserInfo() {
+        const match = document.cookie.match(/(^|;\s*)SiteUserInfo=([^;]+)/);
+        if (!match) return null;
+
+        try {
+            return JSON.parse(decodeURIComponent(match[2]));
+        } catch (err) {
+            console.error('Error parsing SiteUserInfo cookie:', err);
+            return null;
+        }
+    }
+
+    function setSharedCookie(cookieName, cookieDomain) {
+        const info = getSiteUserInfo();
+        if (!info || !info.siteUserId) return;
+
+        const userId = encodeURIComponent(info.siteUserId);
+        const cookieStr = `${cookieName}=${userId}; path=/; domain=${cookieDomain}; secure; samesite=lax`;
+        document.cookie = cookieStr;
+    }
+
     function initStenoChat() {
-        // Don't initialize for crawlers
         if (isCrawler()) {
             console.log('Crawler detected, skipping chat initialization');
             return;
         }
 
-        let chatIframe = document.getElementById('chat-iframe');
-        if (chatIframe) return; // Check if the chat iframe already exists to avoid duplication
-
         const chatScript = document.querySelector('script[src$="steno-chat.js"]');
+
+        // Read optional cookie settings
+        const cookieName = chatScript?.getAttribute('data-cookie-name');
+        const cookieDomain = chatScript?.getAttribute('data-cookie-domain');
+
+        // Only set cookie if both parameters are provided
+        if (cookieName && cookieDomain) {
+            setSharedCookie(cookieName, cookieDomain);
+        }
+
+        let chatIframe = document.getElementById('chat-iframe');
+        if (chatIframe) return;
+
         const chatId = chatScript?.getAttribute('data-id') || 'default';
         const chatUrl = chatScript?.getAttribute('data-url') || CONFIG.DEFAULT_CHAT_URL;
         const chatPosition = chatScript?.getAttribute('data-position');
         const chatMode = chatScript?.getAttribute('data-mode');
         const chatBackend = chatScript?.getAttribute('data-backend');
 
-        // Validate the chatUrl
         if (!isValidChatUrl(chatUrl)) {
             console.error('Steno Chat - Invalid chat URL. Allowed URLs are: ' + CONFIG.ALLOWED_URLS.join(', '));
             return;
@@ -49,29 +76,20 @@
 
         const params = new URLSearchParams();
         params.append('id', chatId);
-        if (chatPosition) {
-            params.append('position', chatPosition);
-        }
-        if (chatMode) {
-            params.append('mode', chatMode);
-        }
-        if (chatBackend) {
-            params.append('backend', chatBackend);
-        }
+        if (chatPosition) params.append('position', chatPosition);
+        if (chatMode) params.append('mode', chatMode);
+        if (chatBackend) params.append('backend', chatBackend);
 
         const chatIframeSrc = `${chatUrl}/chat?${params.toString()}`;
 
         if (chatIframeSrc) {
             chatIframe = document.createElement('iframe');
-
-            // Add SEO-friendly attributes
             chatIframe.id = 'chat-iframe';
             chatIframe.setAttribute('title', 'Steno Chat Support Widget');
             chatIframe.setAttribute('aria-hidden', 'true');
             chatIframe.setAttribute('tabindex', '-1');
             chatIframe.setAttribute('loading', 'lazy');
 
-            // Add error handling
             chatIframe.onerror = function () {
                 console.error('Failed to load Steno chat widget');
                 chatIframe.remove();
@@ -99,23 +117,18 @@
             chatIframe.setAttribute('allow', 'autoplay; clipboard-write *; clipboard-read *; encrypted-media *; fullscreen; picture-in-picture; microphone *;');
             chatIframe.setAttribute('scrolling', 'no');
 
-            // Defer iframe insertion using requestAnimationFrame
             requestAnimationFrame(() => {
                 document.body.appendChild(chatIframe);
             });
 
-            // Optimize message event listener with a single bound function
             const messageHandler = event => {
-                // Add origin verification
                 if (!CONFIG.ALLOWED_URLS.includes(event.origin)) return;
-
                 if (!event.data?.action) return;
 
                 try {
                     switch (event.data.action) {
                         case "navigate":
                             if (!event.data.url) return;
-                            // Add URL validation before opening
                             const url = new URL(event.data.url);
                             if (url.protocol !== 'https:') return;
                             window.open(url.href, "_blank", "noopener,noreferrer");
@@ -140,16 +153,13 @@
 
             window.addEventListener("message", messageHandler);
 
-            // Add cleanup function
             const cleanup = () => {
                 window.removeEventListener("message", messageHandler);
                 chatIframe?.remove();
             };
 
-            // Clean up on page unload
             window.addEventListener('unload', cleanup);
 
-            // Add error boundary
             window.addEventListener('error', (event) => {
                 if (event.target === chatIframe) {
                     console.error('Chat iframe error:', event.error);
@@ -159,7 +169,6 @@
         }
     }
 
-    // Use requestIdleCallback for non-critical initialization
     if (window.requestIdleCallback) {
         requestIdleCallback(() => {
             if (document.readyState === "interactive" || document.readyState === "complete") {

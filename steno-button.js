@@ -41,13 +41,15 @@
     };
 
     function createStenoChatButton() {
-        // Get the script element and its attributes
+
         const buttonScript = document.querySelector('script[src*="steno-button.js"]');
         const chatId = buttonScript?.getAttribute('data-id') || 'default';
         const chatPosition = buttonScript?.getAttribute('data-position');
-        const chatMode = buttonScript?.getAttribute('data-mode');
+        const chatMode = "panel";
         const chatBackend = buttonScript?.getAttribute('data-backend');
         const chatUrl = buttonScript?.getAttribute('data-url');
+        const sourceCookieName = buttonScript?.getAttribute('data-cookie-name');
+        const targetCookieDomain = buttonScript?.getAttribute('data-cookie-domain');
 
         // Get client-specific styles
         const clientStyle = CONFIG.STYLES[chatId];
@@ -102,6 +104,8 @@
             if (chatMode) stenoScript.setAttribute('data-mode', chatMode);
             if (chatBackend) stenoScript.setAttribute('data-backend', chatBackend);
             if (chatUrl) stenoScript.setAttribute('data-url', chatUrl);
+            if (sourceCookieName) stenoScript.setAttribute('data-cookie-name', sourceCookieName);
+            if (targetCookieDomain) stenoScript.setAttribute('data-cookie-domain', targetCookieDomain);
 
             document.body.appendChild(stenoScript);
             openChatButton.style.display = 'none';

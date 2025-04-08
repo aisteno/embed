@@ -18,6 +18,7 @@
                     background: rgb(23, 120, 129);
                     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
                     transition: all 0.2s ease;
+                    outline: none;
                     display: flex;
                     align-items: center;
                     justify-content: center;
@@ -26,9 +27,6 @@
                     src: 'https://res.cloudinary.com/dmcrsjgu0/image/upload/v1743001995/Afterall-logo_npdtys.svg',
                     styles: `
                         width: 45px;
-                        height: 45px;
-                        object-fit: contain;
-                        object-position: center;
                     `
                 },
                 hover: `

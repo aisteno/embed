@@ -26,7 +26,7 @@
                 logo: {
                     src: 'https://res.cloudinary.com/dmcrsjgu0/image/upload/v1743001995/Afterall-logo_npdtys.svg',
                     styles: `
-                        width: 45px;
+                        min-width: 45px;
                     `
                 },
                 hover: `

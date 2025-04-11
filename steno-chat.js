@@ -11,7 +11,9 @@
             'https://dev-chat.rpmplanner.com',
             'https://exp-chat.rpmplanner.com',
             'https://dev-chat.afterall.com',
-            'https://dev-chat.myhappy.horse'
+            'https://dev-chat.myhappy.horse',
+            'https://chat.afterall.com',
+            'https://chat.myhappy.horse'
         ],
         DEFAULT_CHAT_URL: 'https://chat.steno.ai',
         MOBILE_BREAKPOINT: 500

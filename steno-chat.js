@@ -59,6 +59,7 @@
         const chatPosition = chatScript?.getAttribute('data-position');
         const chatMode = chatScript?.getAttribute('data-mode');
         const chatBackend = chatScript?.getAttribute('data-backend');
+        const chatLanguage = chatScript?.getAttribute('data-language');
 
         if (!isValidChatUrl(chatUrl)) {
             console.error('Steno Chat - Invalid chat URL. Allowed URLs are: ' + CONFIG.ALLOWED_URLS.join(', '));
@@ -70,6 +71,7 @@
         if (chatPosition) params.append('position', chatPosition);
         if (chatMode) params.append('mode', chatMode);
         if (chatBackend) params.append('backend', chatBackend);
+        if (chatLanguage) params.append('language', chatLanguage);
 
         const chatIframeSrc = `${chatUrl}/chat?${params.toString()}`;
 

@@ -97,7 +97,13 @@
             chatIframe.style.colorScheme = 'only dark';
             chatIframe.style.overflow = 'hidden';
 
-            if (chatPosition === 'center') {
+            if (chatMode === 'fullscreen') {
+                chatIframe.style.top = '0';
+                chatIframe.style.left = '0';
+                chatIframe.style.width = '100vw';
+                chatIframe.style.height = '100vh';
+                chatIframe.style.bottom = 'unset';
+            } else if (chatPosition === 'center') {
                 chatIframe.style.left = '50%';
                 chatIframe.style.transform = 'translateX(-50%)';
                 chatIframe.style.width = '330px';
@@ -121,14 +127,19 @@
 
                 try {
                     switch (event.data.action) {
-                        case "navigate":
+                        case "navigate": {
                             if (!event.data.url) return;
                             const url = new URL(event.data.url);
                             if (url.protocol !== 'https:') return;
                             window.open(url.href, "_blank", "noopener,noreferrer");
                             break;
-                        case "resize":
+                        }
+                        case "resize": {
                             if (!event.data.width || !event.data.height) return;
+
+                            // Don't resize if we're in fullscreen mode
+                            if (chatMode === 'fullscreen') return;
+
                             const { width, height } = event.data;
                             const isMobile = window.innerWidth <= CONFIG.MOBILE_BREAKPOINT &&
                                 width !== "80px" &&
@@ -137,6 +148,7 @@
                             chatIframe.style.width = isMobile ? "100%" : width;
                             chatIframe.style.height = isMobile ? "100%" : height;
                             break;
+                        }
                         default:
                             return;
                     }

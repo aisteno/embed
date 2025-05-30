@@ -73,7 +73,7 @@
         if (chatBackend) params.append('backend', chatBackend);
         if (chatLanguage) params.append('language', chatLanguage);
 
-        const chatIframeSrc = `${chatUrl}/chat?${params.toString()}`;
+        const chatIframeSrc = `${chatUrl}?${params.toString()}`;
 
         if (chatIframeSrc) {
             chatIframe = document.createElement('iframe');

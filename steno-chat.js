@@ -16,7 +16,7 @@
             'https://chat.myhappy.horse'
         ],
         DEFAULT_CHAT_URL: 'https://chat.steno.ai',
-        MOBILE_BREAKPOINT: 500
+        MOBILE_BREAKPOINT: 768
     };
 
     function isValidChatUrl(url) {
@@ -45,7 +45,7 @@
         const sourceCookieName = chatScript?.getAttribute('data-cookie-name');
         const targetCookieDomain = chatScript?.getAttribute('data-cookie-domain');
 
-        // Read source cookie and write StenoInfo cookie if both params are set
+        // Read source cookie and write cookie if both params are set
         if (sourceCookieName && targetCookieDomain) {
             const rawCookieValue = getCookieValue(sourceCookieName);
             setTopLevelCookie(rawCookieValue, targetCookieDomain);
@@ -66,10 +66,18 @@
             return;
         }
 
+        // Check if we're on mobile and disable panel mode if so
+        const isMobile = window.innerWidth <= CONFIG.MOBILE_BREAKPOINT;
+        const effectiveMode = (isMobile && chatMode === 'panel') ? null : chatMode;
+
+        if (isMobile && chatMode === 'panel') {
+            console.log('Mobile detected: Panel mode disabled, chat will start closed');
+        }
+
         const params = new URLSearchParams();
         params.append('id', chatId);
         if (chatPosition) params.append('position', chatPosition);
-        if (chatMode) params.append('mode', chatMode);
+        if (effectiveMode) params.append('mode', effectiveMode);
         if (chatBackend) params.append('backend', chatBackend);
         if (chatLanguage) params.append('language', chatLanguage);
 

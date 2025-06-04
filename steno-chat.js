@@ -13,7 +13,8 @@
             'https://dev-chat.afterall.com',
             'https://dev-chat.myhappy.horse',
             'https://chat.afterall.com',
-            'https://chat.myhappy.horse'
+            'https://chat.myhappy.horse',
+            'https://steno.glob.cc'
         ],
         DEFAULT_CHAT_URL: 'https://chat.steno.ai',
         MOBILE_BREAKPOINT: 768

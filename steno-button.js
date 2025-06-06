@@ -48,6 +48,7 @@
         const chatUrl = buttonScript?.getAttribute('data-url');
         const sourceCookieName = buttonScript?.getAttribute('data-cookie-name');
         const targetCookieDomain = buttonScript?.getAttribute('data-cookie-domain');
+        const chatZIndex = buttonScript?.getAttribute('data-z-index') || '9999';
 
         // Get client-specific styles
         const clientStyle = CONFIG.STYLES[chatId];
@@ -104,6 +105,7 @@
             if (chatUrl) stenoScript.setAttribute('data-url', chatUrl);
             if (sourceCookieName) stenoScript.setAttribute('data-cookie-name', sourceCookieName);
             if (targetCookieDomain) stenoScript.setAttribute('data-cookie-domain', targetCookieDomain);
+            if (chatZIndex) stenoScript.setAttribute('data-z-index', chatZIndex);
 
             document.body.appendChild(stenoScript);
             openChatButton.style.display = 'none';

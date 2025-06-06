@@ -61,6 +61,7 @@
         const chatMode = chatScript?.getAttribute('data-mode');
         const chatBackend = chatScript?.getAttribute('data-backend');
         const chatLanguage = chatScript?.getAttribute('data-language');
+        const chatZIndex = chatScript?.getAttribute('data-z-index') || '9999';
 
         if (!isValidChatUrl(chatUrl)) {
             console.error('Steno Chat - Invalid chat URL. Allowed URLs are: ' + CONFIG.ALLOWED_URLS.join(', '));
@@ -101,7 +102,7 @@
             chatIframe.src = chatIframeSrc;
             chatIframe.style.position = 'fixed';
             chatIframe.style.bottom = '0';
-            chatIframe.style.zIndex = '9999';
+            chatIframe.style.zIndex = chatZIndex;
             chatIframe.style.border = 'none';
             chatIframe.style.colorScheme = 'only dark';
             chatIframe.style.overflow = 'hidden';

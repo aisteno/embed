@@ -14,7 +14,8 @@
             'https://dev-chat.myhappy.horse',
             'https://chat.afterall.com',
             'https://chat.myhappy.horse',
-            'https://steno.glob.cc'
+            'https://steno.glob.cc',
+            'https://chat.askslim.com'
         ],
         DEFAULT_CHAT_URL: 'https://chat.steno.ai',
         MOBILE_BREAKPOINT: 768

@@ -7,7 +7,6 @@
                     position: fixed;
                     bottom: 10px;
                     right: 10px;
-                    z-index: 9999;
                     cursor: pointer;
                     padding: 16px;
                     width: 60px;
@@ -76,7 +75,7 @@
         const style = document.createElement('style');
         style.innerHTML = `
             #openChatButton {
-                ${clientStyle.button}
+                ${clientStyle.button.replace('${chatZIndex}', chatZIndex)}
             }
 
             #openChatButton:hover {

@@ -75,7 +75,8 @@
         const style = document.createElement('style');
         style.innerHTML = `
             #openChatButton {
-                ${clientStyle.button.replace('${chatZIndex}', chatZIndex)}
+                ${clientStyle.button}
+                z-index: ${chatZIndex};
             }
 
             #openChatButton:hover {

@@ -9,30 +9,24 @@
                     right: 10px;
                     cursor: pointer;
                     padding: 16px;
-                    width: 60px;
-                    height: 60px;
-                    border-radius: 12px;
-                    border-bottom-right-radius: 0px;
+                    width: 172px;
+                    height: 79px;
+                    background-color: transparent;
                     border: none;
-                    background: rgb(23, 120, 129);
-                    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-                    transition: all 0.2s ease;
                     outline: none;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
+                    box-shadow: none;
+                    transition: transform 0.2s ease-in-out; 
+                `,
+                hover: `
+                    transform: scale(1.05);
                 `,
                 logo: {
-                    src: 'https://res.cloudinary.com/dmcrsjgu0/image/upload/v1743001995/Afterall-logo_npdtys.svg',
+                    src: 'https://res.cloudinary.com/dyesqqjw9/image/upload/v1749700588/Chatbot_Bubble_tnhqey.svg',
                     styles: `
-                        min-width: 45px;
+                        min-width: 172px;
+                        transition: transform 0.2s ease-in-out;
                     `
                 },
-                hover: `
-                    background: rgb(20, 108, 116);
-                    transform: scale(1.1);
-                    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-                `
             }
         }
     };

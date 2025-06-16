@@ -4,6 +4,7 @@
     }
 
     const CONFIG = {
+        // this needs to be updated also in /steno-chat/src/utils/constants.ts
         ALLOWED_URLS: [
             'https://chat.steno.ai',
             'https://devchat.steno.ai',

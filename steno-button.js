@@ -105,7 +105,6 @@
             if (chatUrl) stenoScript.setAttribute('data-url', chatUrl);
             if (sourceCookieName) stenoScript.setAttribute('data-cookie-name', sourceCookieName);
             if (targetCookieDomain) stenoScript.setAttribute('data-cookie-domain', targetCookieDomain);
-            if (chatZIndex) stenoScript.setAttribute('data-z-index', chatZIndex);
 
             document.body.appendChild(stenoScript);
             openChatButton.style.display = 'none';

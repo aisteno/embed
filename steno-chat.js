@@ -84,6 +84,7 @@
         if (effectiveMode) params.append('mode', effectiveMode);
         if (chatBackend) params.append('backend', chatBackend);
         if (chatLanguage) params.append('language', chatLanguage);
+        if (isMobile) params.append('mobile', 'true');
 
         const chatIframeSrc = `${chatUrl}?${params.toString()}`;
 

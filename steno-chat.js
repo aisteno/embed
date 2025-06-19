@@ -142,7 +142,8 @@
                         case "navigate": {
                             if (!event.data.url) return;
                             const url = new URL(event.data.url);
-                            if (url.protocol !== 'https:') return;
+                            const allowedProtocols = ['https:', 'tel:', 'mailto:'];
+                            if (!allowedProtocols.includes(url.protocol)) return;
                             window.open(url.href, "_blank", "noopener,noreferrer");
                             break;
                         }

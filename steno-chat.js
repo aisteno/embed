@@ -145,7 +145,11 @@
                             const url = new URL(event.data.url);
                             const allowedProtocols = ['https:', 'tel:', 'mailto:'];
                             if (!allowedProtocols.includes(url.protocol)) return;
-                            window.open(url.href, "_blank", "noopener,noreferrer");
+                            if (url.protocol === 'tel:') {
+                                window.location.href = url.href;
+                            } else {
+                                window.open(url.href, "_blank", "noopener,noreferrer");
+                            }
                             break;
                         }
                         case "resize": {

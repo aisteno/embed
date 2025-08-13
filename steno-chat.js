@@ -17,7 +17,9 @@
             'https://chat.myhappy.horse',
             'https://steno.glob.cc',
             'https://chat.askslim.com',
-            'https://chat.jane-anderson.com.au'
+            'https://chat.jane-anderson.com.au',
+            'https://dev-chat.altogetherfuneral.com',
+            'https://chat.altogetherfuneral.com'
         ],
         DEFAULT_CHAT_URL: 'https://chat.steno.ai',
         MOBILE_BREAKPOINT: 768

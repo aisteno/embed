@@ -4,30 +4,59 @@
     }
 
     const CONFIG = {
-        // this needs to be updated also in /steno-chat/src/utils/constants.ts
-        ALLOWED_URLS: [
-            'https://chat.steno.ai',
-            'https://devchat.steno.ai',
-            'https://chat.rpmplanner.com',
-            'https://dev-chat.rpmplanner.com',
-            'https://exp-chat.rpmplanner.com',
-            'https://dev-chat.afterall.com',
-            'https://dev-chat.myhappy.horse',
-            'https://chat.afterall.com',
-            'https://chat.myhappy.horse',
-            'https://steno.glob.cc',
-            'https://chat.askslim.com',
-            'https://chat.jane-anderson.com.au',
-            'https://dev-chat.altogetherfuneral.com',
-            'https://chat.altogetherfuneral.com'
-        ],
         DEFAULT_CHAT_URL: 'https://chat.steno.ai',
-        MOBILE_BREAKPOINT: 768
+        MOBILE_BREAKPOINT: 768,
+        API_BASE_URL: 'https://voice-api.steno.ai'
     };
 
-    function isValidChatUrl(url) {
-        return CONFIG.ALLOWED_URLS.includes(url) ||
-            CONFIG.ALLOWED_URLS.some(allowed => new URL(url).origin === new URL(allowed).origin);
+    // In-memory Promise cache for domain validation - secure and performant
+    const domainValidationPromises = new Map();
+
+    function checkDomainWithAPI(url) {
+        try {
+            const domain = new URL(url).hostname;
+
+            // Check if a validation Promise for this domain is already in flight
+            if (domainValidationPromises.has(domain)) {
+                // Return the existing promise - all callers will await the same result
+                return domainValidationPromises.get(domain);
+            }
+
+            // Create a new validation request
+            const fetchPromise = fetch(`${CONFIG.API_BASE_URL}/api/v1/domains/check?domain=${encodeURIComponent(domain)}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    }
+                    // For non-ok responses, treat as invalid
+                    return { isValid: false };
+                })
+                .then(data => {
+                    // Return the boolean result
+                    return data.isValid;
+                })
+                .catch(error => {
+                    // On network error or any other failure, fail closed (deny access)
+                    console.error('Domain validation API error:', error);
+                    return false;
+                });
+
+            // Store the Promise in the map immediately
+            domainValidationPromises.set(domain, fetchPromise);
+
+            // Return the new promise
+            return fetchPromise;
+
+        } catch (error) {
+            // This catches synchronous errors like a malformed URL
+            console.error('Domain validation sync error:', error);
+            return Promise.resolve(false);
+        }
     }
 
     function getCookieValue(cookieName) {
@@ -41,7 +70,7 @@
         document.cookie = cookieStr;
     }
 
-    function initStenoChat() {
+    async function initStenoChat() {
         if (isCrawler()) {
             console.log('Crawler detected, skipping chat initialization');
             return;
@@ -68,8 +97,10 @@
         const chatLanguage = chatScript?.getAttribute('data-language');
         const chatZIndex = chatScript?.getAttribute('data-z-index') || '9999';
 
-        if (!isValidChatUrl(chatUrl)) {
-            console.error('Steno Chat - Invalid chat URL. Allowed URLs are: ' + CONFIG.ALLOWED_URLS.join(', '));
+        // Check domain validity with API or fallback
+        const isValid = await checkDomainWithAPI(chatUrl);
+        if (!isValid) {
+            console.error('Steno Chat - Invalid chat URL. Domain not authorized.');
             return;
         }
 
@@ -137,8 +168,10 @@
                 document.body.appendChild(chatIframe);
             });
 
-            const messageHandler = event => {
-                if (!CONFIG.ALLOWED_URLS.includes(event.origin)) return;
+            const messageHandler = async event => {
+                // Validate origin against API
+                const isValidOrigin = await checkDomainWithAPI(event.origin);
+                if (!isValidOrigin) return;
                 if (!event.data?.action) return;
 
                 try {

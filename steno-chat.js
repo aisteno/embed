@@ -19,7 +19,8 @@
             'https://chat.askslim.com',
             'https://chat.jane-anderson.com.au',
             'https://dev-chat.altogetherfuneral.com',
-            'https://chat.altogetherfuneral.com'
+            'https://chat.altogetherfuneral.com',
+            'https://chat.irstaxanswers.ai'
         ],
         DEFAULT_CHAT_URL: 'https://chat.steno.ai',
         MOBILE_BREAKPOINT: 768

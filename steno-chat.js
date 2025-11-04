@@ -61,7 +61,7 @@
         let chatIframe = document.getElementById('chat-iframe');
         if (chatIframe) return;
 
-        const chatId = chatScript?.getAttribute('data-id') || 'default';
+        const chatId = chatScript?.getAttribute('data-id');
         const chatUrl = chatScript?.getAttribute('data-url') || CONFIG.DEFAULT_CHAT_URL;
         const chatPosition = chatScript?.getAttribute('data-position');
         const chatMode = chatScript?.getAttribute('data-mode');
@@ -83,7 +83,7 @@
         }
 
         const params = new URLSearchParams();
-        params.append('id', chatId);
+        if (chatId) params.append('id', chatId);
         if (chatPosition) params.append('position', chatPosition);
         if (effectiveMode) params.append('mode', effectiveMode);
         if (chatBackend) params.append('backend', chatBackend);

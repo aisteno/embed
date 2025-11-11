@@ -26,9 +26,18 @@
         MOBILE_BREAKPOINT: 768
     };
 
+    function normalizeUrl(url) {
+        // If URL doesn't start with http:// or https://, prepend https://
+        if (!/^https?:\/\//.test(url)) {
+            return `https://${url}`;
+        }
+        return url;
+    }
+
     function isValidChatUrl(url) {
-        return CONFIG.ALLOWED_URLS.includes(url) ||
-            CONFIG.ALLOWED_URLS.some(allowed => new URL(url).origin === new URL(allowed).origin);
+        const normalizedUrl = normalizeUrl(url);
+        return CONFIG.ALLOWED_URLS.includes(normalizedUrl) ||
+            CONFIG.ALLOWED_URLS.some(allowed => new URL(normalizedUrl).origin === new URL(allowed).origin);
     }
 
     function getCookieValue(cookieName) {
@@ -62,14 +71,15 @@
         if (chatIframe) return;
 
         const chatId = chatScript?.getAttribute('data-id');
-        const chatUrl = chatScript?.getAttribute('data-url') || CONFIG.DEFAULT_CHAT_URL;
+        const rawChatUrl = chatScript?.getAttribute('data-url') || CONFIG.DEFAULT_CHAT_URL;
+        const chatUrl = normalizeUrl(rawChatUrl);
         const chatPosition = chatScript?.getAttribute('data-position');
         const chatMode = chatScript?.getAttribute('data-mode');
         const chatBackend = chatScript?.getAttribute('data-backend');
         const chatLanguage = chatScript?.getAttribute('data-language');
         const chatZIndex = chatScript?.getAttribute('data-z-index') || '9999';
 
-        if (!isValidChatUrl(chatUrl)) {
+        if (!isValidChatUrl(rawChatUrl)) {
             console.error('Steno Chat - Invalid chat URL. Allowed URLs are: ' + CONFIG.ALLOWED_URLS.join(', '));
             return;
         }

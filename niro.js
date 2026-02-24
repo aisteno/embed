@@ -14,7 +14,7 @@
         let niroIframe = document.getElementById('niro-iframe');
         if (niroIframe) return;
 
-        const niroId = chatScript?.getAttribute('data-id') || 'default';
+        const niroId = chatScript?.getAttribute('data-id')?.trim() || 'steno';
 
         const params = new URLSearchParams();
         params.append('id', niroId);

@@ -79,6 +79,9 @@ jobs:
           cp dist/niro.js /tmp/release-files/
           cp index.html /tmp/release-files/
 
+          # Clean working directory of build artifacts before branch switch
+          rm -rf node_modules dist
+
           # Switch to release branch (create orphan if it doesn't exist)
           if git rev-parse --verify origin/release >/dev/null 2>&1; then
             git checkout release
@@ -87,8 +90,9 @@ jobs:
             git rm -rf .
           fi
 
-          # Replace all files with obfuscated versions
-          rm -f *.js *.html
+          # Remove everything and replace with only the release files
+          git rm -rf . 2>/dev/null || true
+          rm -rf *
           cp /tmp/release-files/* .
 
           git add -A

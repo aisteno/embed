@@ -1,0 +1,125 @@
+name: Build and Release
+
+on:
+  push:
+    branches: [main]
+
+env:
+  # Set to "false" to enable tagging, GitHub releases, and jsDelivr cache purge.
+  # Keep "true" while testing — only pushes to the release branch, no tag, no release.
+  DRY_RUN: "true"
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Determine next version
+        id: version
+        run: |
+          LATEST=$(git tag -l '[0-9]*' --sort=-v:refname | head -1)
+          if [ -z "$LATEST" ]; then
+            NEXT="3.2.6"
+          else
+            IFS='.' read -r MAJOR MINOR PATCH <<< "$LATEST"
+            NEXT="$MAJOR.$MINOR.$((PATCH + 1))"
+          fi
+          echo "version=$NEXT" >> "$GITHUB_OUTPUT"
+          echo "Next version: $NEXT"
+
+      - name: Obfuscate JavaScript files
+        run: |
+          mkdir -p dist
+          for file in steno-chat.js steno-button.js niro.js; do
+            npx javascript-obfuscator "$file" \
+              --output "dist/$file" \
+              --options-preset low-obfuscation \
+              --compact true \
+              --string-array true \
+              --string-array-threshold 1.0 \
+              --string-array-encoding rc4 \
+              --string-array-rotate true \
+              --string-array-shuffle true \
+              --string-array-index-shift true \
+              --string-array-wrappers-count 2 \
+              --string-array-wrappers-type function \
+              --dead-code-injection false \
+              --self-defending false \
+              --control-flow-flattening false \
+              --split-strings false \
+              --unicode-escape-sequence false \
+              --target browser \
+              --source-map false
+          done
+
+      - name: Prepare release branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Save obfuscated files
+          mkdir -p /tmp/release-files
+          cp dist/steno-chat.js /tmp/release-files/
+          cp dist/steno-button.js /tmp/release-files/
+          cp dist/niro.js /tmp/release-files/
+          cp index.html /tmp/release-files/
+
+          # Switch to release branch (create orphan if it doesn't exist)
+          if git rev-parse --verify origin/release >/dev/null 2>&1; then
+            git checkout release
+          else
+            git checkout --orphan release
+            git rm -rf .
+          fi
+
+          # Replace all files with obfuscated versions
+          rm -f *.js *.html
+          cp /tmp/release-files/* .
+
+          git add -A
+          git commit -m "Release ${{ steps.version.outputs.version }}" --allow-empty
+
+      - name: Push release branch
+        run: git push origin release --force
+
+      - name: Tag and release
+        if: env.DRY_RUN == 'false'
+        run: |
+          git tag "${{ steps.version.outputs.version }}"
+          git push origin "${{ steps.version.outputs.version }}"
+
+      - name: Create GitHub Release
+        if: env.DRY_RUN == 'false'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.version }}
+          name: v${{ steps.version.outputs.version }}
+          body: |
+            Automated release from main branch.
+            Commit: ${{ github.sha }}
+          files: |
+            dist/steno-chat.js
+            dist/steno-button.js
+            dist/niro.js
+
+      - name: Purge jsDelivr cache
+        if: env.DRY_RUN == 'false'
+        run: |
+          for file in steno-chat.js steno-button.js niro.js; do
+            curl -s "https://purge.jsdelivr.net/gh/aisteno/embed@latest/$file" || true
+          done

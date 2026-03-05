@@ -7,7 +7,7 @@ on:
 env:
   # Set to "false" to enable tagging, GitHub releases, and jsDelivr cache purge.
   # Keep "true" while testing — only pushes to the release branch, no tag, no release.
-  DRY_RUN: "true"
+  DRY_RUN: "false"
 
 permissions:
   contents: write

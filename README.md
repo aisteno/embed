@@ -64,9 +64,13 @@ The repo now supports two delivery tracks:
 - **Cloudflare Pages previews** for testing minified assets on non-`main` branches
 - **Legacy jsDelivr release publishing** from `main` for existing customers until the cutover is complete
 
-### Cloudflare Pages previews
+### Cloudflare Pages deploys
 
-Push any non-`main` branch to trigger `.github/workflows/cloudflare-pages.yml`. It builds minified assets into `dist/` and deploys them to a Cloudflare Pages preview URL. The workflow also supports manual `preview` or `production` deploys through `workflow_dispatch`.
+`.github/workflows/cloudflare-pages.yml` is now the canonical delivery workflow:
+
+- Push any non-`main` branch to get a Cloudflare Pages preview deployment.
+- Push or merge to `main` to automatically publish the production Pages deployment.
+- Use `workflow_dispatch` only when you want to trigger an explicit preview or production deploy from GitHub.
 
 Required GitHub configuration:
 

@@ -3,7 +3,6 @@ name: Cloudflare Pages
 on:
   push:
     branches-ignore:
-      - main
       - release
   workflow_dispatch:
     inputs:
@@ -71,25 +70,25 @@ jobs:
 
       - name: Deploy preview
         id: deploy-preview
-        if: github.event_name == 'push' || github.event.inputs.target == 'preview'
+        if: (github.event_name == 'push' && github.ref_name != 'main') || (github.event_name == 'workflow_dispatch' && github.event.inputs.target == 'preview')
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
           wranglerVersion: "4"
-          command: pages deploy dist --project-name=${{ vars.CLOUDFLARE_PAGES_PROJECT }} --branch=${{ github.ref_name }}
+          command: pages deploy dist --project-name=${{ vars.CLOUDFLARE_PAGES_PROJECT }} --branch=${{ github.ref_name }} --commit-dirty=true
 
       - name: Deploy production
         id: deploy-production
-        if: github.event_name == 'workflow_dispatch' && github.event.inputs.target == 'production'
+        if: (github.event_name == 'push' && github.ref_name == 'main') || (github.event_name == 'workflow_dispatch' && github.event.inputs.target == 'production')
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
           wranglerVersion: "4"
-          command: pages deploy dist --project-name=${{ vars.CLOUDFLARE_PAGES_PROJECT }} --branch=main
+          command: pages deploy dist --project-name=${{ vars.CLOUDFLARE_PAGES_PROJECT }} --branch=main --commit-dirty=true
 
       - name: Summarize preview deployment
         if: steps.deploy-preview.outcome == 'success'

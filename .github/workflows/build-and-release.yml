@@ -42,49 +42,24 @@ jobs:
           echo "version=$NEXT" >> "$GITHUB_OUTPUT"
           echo "Next version: $NEXT"
 
-      - name: Obfuscate JavaScript files
-        run: |
-          mkdir -p dist
-          for file in steno-chat.js steno-button.js niro.js; do
-            npx javascript-obfuscator "$file" \
-              --output "dist/$file" \
-              --options-preset low-obfuscation \
-              --compact true \
-              --string-array true \
-              --string-array-threshold 1.0 \
-              --string-array-encoding rc4 \
-              --string-array-rotate true \
-              --string-array-shuffle true \
-              --string-array-index-shift true \
-              --string-array-wrappers-count 2 \
-              --string-array-wrappers-type function \
-              --dead-code-injection false \
-              --self-defending false \
-              --control-flow-flattening false \
-              --split-strings false \
-              --unicode-escape-sequence false \
-              --target browser \
-              --source-map false
-          done
+      - name: Build minified release files
+        run: BUILD_VERSION="${{ steps.version.outputs.version }}" npm run build:minified
 
       - name: Prepare release branch
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          # Save obfuscated files
+          # Save release files before switching branches.
           mkdir -p /tmp/release-files
           cp dist/steno-chat.js /tmp/release-files/
           cp dist/steno-button.js /tmp/release-files/
           cp dist/niro.js /tmp/release-files/
           cp index.html /tmp/release-files/
 
-          # Clean working directory of build artifacts before branch switch
-          rm -rf node_modules dist
-
           # Switch to release branch (create orphan if it doesn't exist)
-          if git rev-parse --verify origin/release >/dev/null 2>&1; then
-            git checkout release
+          if git show-ref --verify --quiet refs/remotes/origin/release; then
+            git checkout -B release origin/release
           else
             git checkout --orphan release
             git rm -rf .
@@ -93,7 +68,7 @@ jobs:
           # Remove everything and replace with only the release files
           git rm -rf . 2>/dev/null || true
           rm -rf *
-          cp /tmp/release-files/* .
+          cp -R /tmp/release-files/. .
 
           git add -A
           git commit -m "Release ${{ steps.version.outputs.version }}" --allow-empty
@@ -117,9 +92,9 @@ jobs:
             Automated release from main branch.
             Commit: ${{ github.sha }}
           files: |
-            dist/steno-chat.js
-            dist/steno-button.js
-            dist/niro.js
+            /tmp/release-files/steno-chat.js
+            /tmp/release-files/steno-button.js
+            /tmp/release-files/niro.js
 
       - name: Purge jsDelivr cache
         if: env.DRY_RUN == 'false'

@@ -1,14 +1,14 @@
 # Steno Embed Scripts
 
-Standalone JavaScript embed scripts that add Steno chat widgets to customer websites via iframe. Served through jsDelivr CDN.
+Standalone JavaScript embed scripts that add Steno chat widgets to customer websites via iframe. The long-term canonical host is `embed.steno.ai`, with jsDelivr kept as a legacy compatibility path during migration.
 
 ## Scripts
 
 | Script | Purpose | CDN URL |
 |--------|---------|---------|
-| `steno-chat.js` | Primary chat widget (floating button, panel, or fullscreen) | `cdn.jsdelivr.net/gh/aisteno/embed@latest/steno-chat.js` |
-| `steno-button.js` | Branded button that lazy-loads `steno-chat.js` on click | `cdn.jsdelivr.net/gh/aisteno/embed@latest/steno-button.js` |
-| `niro.js` | Niro product embed (always fullscreen) | `cdn.jsdelivr.net/gh/aisteno/embed@latest/niro.js` |
+| `steno-chat.js` | Primary chat widget (floating button, panel, or fullscreen) | `https://embed.steno.ai/steno-chat.js` |
+| `steno-button.js` | Branded button that lazy-loads `steno-chat.js` on click | `https://embed.steno.ai/steno-button.js` |
+| `niro.js` | Niro product embed (always fullscreen) | `https://embed.steno.ai/niro.js` |
 
 ## Usage
 
@@ -16,7 +16,7 @@ Add a script tag to your page with `data-*` attributes for configuration:
 
 ```html
 <script
-  src="https://cdn.jsdelivr.net/gh/aisteno/embed@latest/steno-chat.js"
+  src="https://embed.steno.ai/steno-chat.js"
   data-id="your-chat-id"
   data-mode="default"
   data-position="right"
@@ -59,10 +59,35 @@ Customer website                    Steno
 
 ## CI/CD workflow
 
-Every push to `main` automatically builds and releases:
+The repo now supports two delivery tracks:
+
+- **Cloudflare Pages previews** for testing minified assets on non-`main` branches
+- **Legacy jsDelivr release publishing** from `main` for existing customers until the cutover is complete
+
+### Cloudflare Pages previews
+
+Push any non-`main` branch to trigger `.github/workflows/cloudflare-pages.yml`. It builds minified assets into `dist/` and deploys them to a Cloudflare Pages preview URL. The workflow also supports manual `preview` or `production` deploys through `workflow_dispatch`.
+
+Required GitHub configuration:
+
+- Repository variable: `CLOUDFLARE_PAGES_PROJECT`
+- Repository secret: `CLOUDFLARE_ACCOUNT_ID`
+- Repository secret: `CLOUDFLARE_API_TOKEN`
+
+If the Pages project is Git-integrated, disable automatic production and preview branch builds in Cloudflare and let this workflow own deploys.
+
+The deploy output includes:
+
+- Root assets for stable URLs such as `/steno-chat.js`
+- Optional versioned assets under `/v/<version>/...` when `BUILD_VERSION` is set
+- A `_headers` file for Cloudflare cache policy
+
+### Legacy jsDelivr publishing
+
+Every push to `main` still builds and publishes the release branch, but now with minified files instead of obfuscated ones:
 
 ```
-main (source)                          release (obfuscated)
+main (source)                          release (minified)
      │                                        │
      │  push                                  │
      ▼                                        │
@@ -70,7 +95,7 @@ main (source)                          release (obfuscated)
  │  GitHub Actions   │                         │
  │                   │                         │
  │  1. npm ci        │                         │
- │  2. obfuscate JS  │──── force push ────────▶│
+ │  2. minify JS     │──── force push ────────▶│
  │  3. tag (semver)  │                         │
  │  4. GH release    │                         │
  │  5. purge CDN     │                         │
@@ -83,17 +108,15 @@ main (source)                          release (obfuscated)
 ### Branches
 
 - **`main`** — Source of truth. Human-readable JavaScript. All changes go here.
-- **`release`** — Managed by CI only. Contains obfuscated JS files at the root level. Never edit directly.
+- **`release`** — Managed by CI only. Contains minified JS files at the root level for jsDelivr. Never edit directly.
 
 ### Versioning
 
 Tags are auto-incremented (patch) from the latest semver tag (e.g. `3.2.6` → `3.2.7`). Never create tags manually.
 
-### Obfuscation
+### Minification
 
-Uses [`javascript-obfuscator`](https://github.com/nicolo-ribaudo/javascript-obfuscator) with:
-- **Low-obfuscation preset** — keeps file size and runtime overhead small
-- **RC4 string encoding** — encrypts all string literals (URLs, domains, config keys) so they're not readable in the output
+Uses [`esbuild`](https://esbuild.github.io/) to minify the public embed artifacts without adding obfuscation-specific runtime patterns.
 
 ### DRY_RUN mode
 
@@ -105,24 +128,14 @@ Set `DRY_RUN: "true"` in the workflow file to push to the `release` branch witho
 
 ## Local development
 
-### Test obfuscation locally
+### Build minified assets locally
 
 ```bash
 npm install
-mkdir -p dist
-for file in steno-chat.js steno-button.js niro.js; do
-  npx javascript-obfuscator "$file" --output "dist/$file" \
-    --options-preset low-obfuscation --compact true \
-    --string-array true --string-array-threshold 1.0 \
-    --string-array-encoding rc4 --string-array-rotate true \
-    --string-array-shuffle true --string-array-index-shift true \
-    --string-array-wrappers-count 2 --string-array-wrappers-type function \
-    --dead-code-injection false --self-defending false \
-    --control-flow-flattening false --split-strings false \
-    --unicode-escape-sequence false --target browser --source-map false
-done
+npm run build:minified
+BUILD_VERSION=3.2.7 npm run build:minified
 ```
 
 ### Test the widget
 
-Open `index.html` in a browser, or point the script src to a local/dist file.
+Open `index.html` in a browser for a local smoke test, or serve `dist/` through a static server to test the Cloudflare-ready output.

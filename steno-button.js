@@ -1,6 +1,5 @@
 (function () {
     const CONFIG = {
-        STENO_SCRIPT_URL: 'https://cdn.jsdelivr.net/gh/aisteno/embed@latest/steno-chat.js',
         STYLES: {
             afterall: {
                 button: `
@@ -31,16 +30,36 @@
         }
     };
 
-    function createStenoChatButton() {
+    function getButtonScript() {
+        if (document.currentScript?.src && /steno-button\.js(?:[?#]|$)/.test(document.currentScript.src)) {
+            return document.currentScript;
+        }
 
-        const buttonScript = document.querySelector('script[src*="steno-button.js"]');
+        return Array.from(document.scripts).find((script) =>
+            script.src && /steno-button\.js(?:[?#]|$)/.test(script.src)
+        ) || null;
+    }
+
+    function getChatScriptUrl(buttonScript) {
+        try {
+            return new URL('steno-chat.js', buttonScript.src).toString();
+        } catch (error) {
+            console.warn('Failed to derive steno-chat.js URL from steno-button.js', error);
+            return 'https://embed.steno.ai/steno-chat.js';
+        }
+    }
+
+    function createStenoChatButton() {
+        const buttonScript = getButtonScript();
+
+        if (!buttonScript) {
+            console.warn('Unable to find the steno-button.js script tag');
+            return;
+        }
+
+        const chatScriptUrl = getChatScriptUrl(buttonScript);
         const chatId = buttonScript?.getAttribute('data-id') || 'default';
-        const chatPosition = buttonScript?.getAttribute('data-position');
         const chatMode = "panel";
-        const chatBackend = buttonScript?.getAttribute('data-backend');
-        const chatUrl = buttonScript?.getAttribute('data-url');
-        const sourceCookieName = buttonScript?.getAttribute('data-cookie-name');
-        const targetCookieDomain = buttonScript?.getAttribute('data-cookie-domain');
         const chatZIndex = buttonScript?.getAttribute('data-z-index') || '9999';
 
         // Get client-specific styles
@@ -89,16 +108,16 @@
 
             const stenoScript = document.createElement('script');
             stenoScript.id = 'stenoScript';
-            stenoScript.src = CONFIG.STENO_SCRIPT_URL;
+            stenoScript.src = chatScriptUrl;
 
-            // Forward all data attributes
-            if (chatId) stenoScript.setAttribute('data-id', chatId);
-            if (chatPosition) stenoScript.setAttribute('data-position', chatPosition);
+            // Forward all data-* attributes from the button embed to the chat embed.
+            Array.from(buttonScript.attributes)
+                .filter((attribute) => attribute.name.startsWith('data-'))
+                .forEach((attribute) => {
+                    stenoScript.setAttribute(attribute.name, attribute.value);
+                });
+
             if (chatMode) stenoScript.setAttribute('data-mode', chatMode);
-            if (chatBackend) stenoScript.setAttribute('data-backend', chatBackend);
-            if (chatUrl) stenoScript.setAttribute('data-url', chatUrl);
-            if (sourceCookieName) stenoScript.setAttribute('data-cookie-name', sourceCookieName);
-            if (targetCookieDomain) stenoScript.setAttribute('data-cookie-domain', targetCookieDomain);
 
             document.body.appendChild(stenoScript);
             openChatButton.style.display = 'none';

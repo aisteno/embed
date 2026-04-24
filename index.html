@@ -1,17 +1,31 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Steno Chat Button Test</title>
+    <title>Steno Chat Container Test</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 32px;
+      }
+
+      #steno-chat-slot {
+        width: min(100%, 960px);
+        height: 700px;
+        border: 1px solid #d1d5db;
+        border-radius: 16px;
+        overflow: hidden;
+      }
+    </style>
   </head>
   <body>
-    <h1>Test Page</h1>
-    <!-- Add some content to see how the button overlays -->
-    <p>This is a test page for the Steno Chat button.</p>
+    <h1>Container Embed Test</h1>
+    <p>This example mounts the chatbot inside an existing page container with a fixed height.</p>
+    <div id="steno-chat-slot"></div>
     <script
       src="./steno-chat.js"
       data-id="sanctavia"
-      data-mode="default"
-      data-position="right"
+      data-container="#steno-chat-slot"
     ></script>
   </body>
 </html>

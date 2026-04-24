@@ -3,6 +3,31 @@
         return /bot|crawler|spider|crawling/i.test(navigator.userAgent);
     }
 
+    function getChatScript() {
+        if (document.currentScript?.src && /steno-chat\.js(?:[?#]|$)/.test(document.currentScript.src)) {
+            return document.currentScript;
+        }
+
+        return Array.from(document.scripts).find((script) =>
+            script.src && /steno-chat\.js(?:[?#]|$)/.test(script.src)
+        ) || null;
+    }
+
+    function getContainerElement(selector) {
+        try {
+            const containerElement = document.querySelector(selector);
+
+            if (!containerElement) {
+                console.error(`Steno Chat - Container not found for selector: ${selector}`);
+            }
+
+            return containerElement;
+        } catch (error) {
+            console.error(`Steno Chat - Invalid container selector: ${selector}`, error);
+            return null;
+        }
+    }
+
     const CONFIG = {
         // this needs to be updated also in /steno-chat/src/utils/constants.ts
         ALLOWED_URLS: [
@@ -57,7 +82,12 @@
             return;
         }
 
-        const chatScript = document.querySelector('script[src$="steno-chat.js"]');
+        const chatScript = getChatScript();
+        if (!chatScript) {
+            console.error('Steno Chat - Unable to find the steno-chat.js script tag');
+            return;
+        }
+
         const sourceCookieName = chatScript?.getAttribute('data-cookie-name');
         const targetCookieDomain = chatScript?.getAttribute('data-cookie-domain');
 
@@ -73,6 +103,9 @@
         const chatId = chatScript?.getAttribute('data-id');
         const rawChatUrl = chatScript?.getAttribute('data-url') || CONFIG.DEFAULT_CHAT_URL;
         const chatUrl = normalizeUrl(rawChatUrl);
+        const chatContainerSelector = chatScript?.getAttribute('data-container');
+        const isContainerMode = Boolean(chatContainerSelector);
+        const chatContainer = isContainerMode ? getContainerElement(chatContainerSelector) : null;
         const chatPosition = chatScript?.getAttribute('data-position');
         const chatMode = chatScript?.getAttribute('data-mode');
         const chatBackend = chatScript?.getAttribute('data-backend');
@@ -84,17 +117,23 @@
             return;
         }
 
+        if (isContainerMode && !chatContainer) {
+            return;
+        }
+
         // Check if we're on mobile and disable panel mode if so
         const isMobile = window.innerWidth <= CONFIG.MOBILE_BREAKPOINT;
-        const effectiveMode = (isMobile && chatMode === 'panel') ? null : chatMode;
+        const effectiveMode = isContainerMode
+            ? 'fullscreen'
+            : (isMobile && chatMode === 'panel') ? null : chatMode;
 
-        if (isMobile && chatMode === 'panel') {
+        if (!isContainerMode && isMobile && chatMode === 'panel') {
             console.log('Mobile detected: Panel mode disabled, chat will start closed');
         }
 
         const params = new URLSearchParams();
         if (chatId) params.append('id', chatId);
-        if (chatPosition) params.append('position', chatPosition);
+        if (!isContainerMode && chatPosition) params.append('position', chatPosition);
         if (effectiveMode) params.append('mode', effectiveMode);
         if (chatBackend) params.append('backend', chatBackend);
         if (chatLanguage) params.append('language', chatLanguage);
@@ -117,25 +156,36 @@
             };
 
             chatIframe.src = chatIframeSrc;
-            chatIframe.style.position = 'fixed';
-            chatIframe.style.bottom = '0';
-            chatIframe.style.zIndex = chatZIndex;
             chatIframe.style.border = 'none';
             chatIframe.style.colorScheme = 'only dark';
             chatIframe.style.overflow = 'hidden';
+            chatIframe.style.display = 'block';
 
-            if (chatMode === 'fullscreen') {
+            if (isContainerMode) {
+                chatIframe.style.position = 'static';
+                chatIframe.style.width = '100%';
+                chatIframe.style.height = '100%';
+            } else if (effectiveMode === 'fullscreen') {
+                chatIframe.style.position = 'fixed';
+                chatIframe.style.bottom = '0';
+                chatIframe.style.zIndex = chatZIndex;
                 chatIframe.style.top = '0';
                 chatIframe.style.left = '0';
                 chatIframe.style.width = '100vw';
                 chatIframe.style.height = '100vh';
                 chatIframe.style.bottom = 'unset';
             } else if (chatPosition === 'center') {
+                chatIframe.style.position = 'fixed';
+                chatIframe.style.bottom = '0';
+                chatIframe.style.zIndex = chatZIndex;
                 chatIframe.style.left = '50%';
                 chatIframe.style.transform = 'translateX(-50%)';
                 chatIframe.style.width = '330px';
                 chatIframe.style.height = '80px';
             } else {
+                chatIframe.style.position = 'fixed';
+                chatIframe.style.bottom = '0';
+                chatIframe.style.zIndex = chatZIndex;
                 chatIframe.style[chatPosition === 'left' ? 'left' : 'right'] = '0';
                 chatIframe.style.width = '80px';
                 chatIframe.style.height = '80px';
@@ -145,6 +195,11 @@
             chatIframe.setAttribute('scrolling', 'no');
 
             requestAnimationFrame(() => {
+                if (isContainerMode) {
+                    chatContainer.appendChild(chatIframe);
+                    return;
+                }
+
                 document.body.appendChild(chatIframe);
             });
 
@@ -169,8 +224,8 @@
                         case "resize": {
                             if (!event.data.width || !event.data.height) return;
 
-                            // Don't resize if we're in fullscreen mode
-                            if (chatMode === 'fullscreen') return;
+                            // Inline containers and fullscreen embeds are sized by the parent layout.
+                            if (isContainerMode || effectiveMode === 'fullscreen') return;
 
                             const { width, height } = event.data;
                             const isMobile = window.innerWidth <= CONFIG.MOBILE_BREAKPOINT &&

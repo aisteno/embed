@@ -1,18 +1,10 @@
 # Steno Embed Scripts
 
-Standalone JavaScript embed scripts that add Steno chat widgets to customer websites via iframe. The long-term canonical host is `embed.steno.ai`, with jsDelivr kept as a legacy compatibility path during migration.
+Standalone JavaScript embed scripts that add Steno chat widgets to customer websites via iframe. This README documents `steno-chat.js`, the primary website embed that injects an iframe pointing at `chat.steno.ai`.
 
-## Scripts
+## Primary Embed Script
 
-| Script | Purpose | CDN URL |
-|--------|---------|---------|
-| `steno-chat.js` | Primary chat widget (floating button, panel, or fullscreen) | `https://embed.steno.ai/steno-chat.js` |
-| `steno-button.js` | Branded button that lazy-loads `steno-chat.js` on click | `https://embed.steno.ai/steno-button.js` |
-| `niro.js` | Niro product embed (always fullscreen) | `https://embed.steno.ai/niro.js` |
-
-## Usage
-
-Add a script tag to your page with `data-*` attributes for configuration:
+Use `steno-chat.js` to embed the Steno chat app on a website:
 
 ```html
 <script
@@ -23,11 +15,46 @@ Add a script tag to your page with `data-*` attributes for configuration:
 ></script>
 ```
 
+## Usage
+
+### Floating widget
+
+```html
+<script
+  src="https://embed.steno.ai/steno-chat.js"
+  data-id="your-chat-id"
+  data-mode="default"
+  data-position="right"
+></script>
+```
+
+### Existing container embed
+
+Use `data-container` when the chat should fill an existing element on the page instead of floating over the page.
+
+```html
+<div id="steno-chat-slot" style="width: 100%; height: 700px;"></div>
+
+<script
+  src="https://embed.steno.ai/steno-chat.js"
+  data-id="your-chat-id"
+  data-container="#steno-chat-slot"
+></script>
+```
+
+Container mode behavior:
+
+- Mounts the iframe inside the matched element instead of `document.body`
+- Fills the container at `width: 100%` and `height: 100%`
+- Opens the full chat immediately
+- Ignores floating positioning attributes such as `data-position`
+
 ### Configuration attributes
 
 | Attribute | Values | Description |
 |-----------|--------|-------------|
 | `data-id` | string | Chat/client identifier |
+| `data-container` | CSS selector | Mount into an existing element instead of creating a floating widget |
 | `data-url` | URL | Custom chat URL (must be in the allowlist) |
 | `data-mode` | `default` \| `panel` \| `fullscreen` | Widget display mode |
 | `data-position` | `left` \| `right` \| `center` | Widget position |
@@ -51,11 +78,15 @@ Customer website                    Steno
 ```
 
 1. The embed script is loaded via `<script>` tag on the customer's website
-2. It creates a fixed-position `<iframe>` pointing at the Steno chat app
-3. The chat app inside the iframe communicates back via `postMessage` for:
+2. It creates an `<iframe>` pointing at the Steno chat app
+3. It either:
+   - appends the iframe to `document.body` for floating widget mode, or
+   - mounts the iframe into the element matched by `data-container`
+4. The chat app inside the iframe communicates back via `postMessage` for:
    - **resize** — adjusting iframe dimensions when the chat opens/closes
    - **navigate** — opening links in the parent window (with protocol allowlist)
-4. Origin validation ensures only allowed domains can send messages
+5. In container mode, the host element owns sizing and resize messages are ignored
+6. Origin validation ensures only allowed domains can send messages
 
 ## CI/CD workflow
 
@@ -140,6 +171,16 @@ npm run build:minified
 BUILD_VERSION=3.2.7 npm run build:minified
 ```
 
+If `npm run build:minified` fails after switching between Rosetta and native Node on macOS, rerun `npm install` to refresh the platform-specific `esbuild` binary.
+
 ### Test the widget
 
-Open `index.html` in a browser for a local smoke test, or serve `dist/` through a static server to test the Cloudflare-ready output.
+Serve the repo over HTTP for a local smoke test:
+
+```bash
+python3 -m http.server 8123
+```
+
+Then open [http://127.0.0.1:8123/index.html](http://127.0.0.1:8123/index.html).
+
+Do not test via `file://.../index.html`; iframe/embed behavior can differ from a real website context.

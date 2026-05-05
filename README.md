@@ -61,6 +61,8 @@ Container mode behavior:
 | `data-backend` | string | Backend override |
 | `data-language` | string | Language code |
 | `data-z-index` | number | CSS z-index (default: `9999`) |
+| `data-border-width` | CSS px value | Optional launcher border width, e.g. `2px` |
+| `data-border-color` | CSS color | Optional launcher border color, e.g. `#177881` |
 | `data-cookie-name` | string | Source cookie name for cross-domain cookie relay |
 | `data-cookie-domain` | string | Target domain for the relayed cookie |
 

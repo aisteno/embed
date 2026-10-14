@@ -46,7 +46,9 @@ Container mode behavior:
 
 - Mounts the iframe inside the matched element instead of `document.body`
 - Fills the container at `width: 100%` and `height: 100%`
-- Opens the full chat immediately
+- Opens the full chat once the container and its ancestors are visible and the container has a nonzero size
+- Waits while the container is hidden, including transparent modal parents with `opacity: 0`, so hidden embeds do not connect or send greetings
+- Keeps the same iframe after its first opening, so hiding and showing the container does not start another session
 - Ignores floating positioning attributes such as `data-position`
 
 ### Configuration attributes
@@ -88,6 +90,7 @@ Customer website                    Steno
    - **resize** — adjusting iframe dimensions when the chat opens/closes
    - **navigate** — opening links in the parent window (with protocol allowlist)
 5. In container mode, the host element owns sizing and resize messages are ignored
+   - The iframe is created only after its container becomes visible. Visibility is checked every 200 ms while waiting, including CSS transitions and parent styles. Being outside the viewport alone does not block initialization; the iframe still uses the browser's lazy loading.
 6. Origin validation ensures only allowed domains can send messages
 
 ## CI/CD workflow
@@ -164,6 +167,12 @@ Set `DRY_RUN: "true"` in the workflow file to push to the `release` branch witho
 `main` requires a pull request to merge. Repository admins can bypass this for hotfixes.
 
 ## Local development
+
+### Embed regression checks
+
+Serve this repository over HTTP and open `/tests/embed-modes.html`. The browser checks hidden and visible containers, CSS transitions, reopening, mobile panel behavior, floating positions, fullscreen sizing, resize messages, and crawler exclusion. Chat iframe navigation is redirected to a local stub by the test fixture, so these checks do not contact production or consume credits.
+
+`node --check steno-chat.js` checks JavaScript syntax without building release assets.
 
 ### Build minified assets locally
 

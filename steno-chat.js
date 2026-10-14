@@ -1,15 +1,18 @@
 (function () {
+    // Capture configuration while this script executes. Idle initialization
+    // happens after document.currentScript is cleared, including CDN loaders.
+    const executingScript = document.currentScript;
     function isCrawler() {
         return /bot|crawler|spider|crawling/i.test(navigator.userAgent);
     }
 
     function getChatScript() {
-        if (document.currentScript?.src && /steno-chat\.js(?:[?#]|$)/.test(document.currentScript.src)) {
-            return document.currentScript;
+        if (executingScript?.src && /steno-chat(?:-runtime)?\.js(?:[?#]|$)/.test(executingScript.src)) {
+            return executingScript;
         }
 
         return Array.from(document.scripts).find((script) =>
-            script.src && /steno-chat\.js(?:[?#]|$)/.test(script.src)
+            script.src && /steno-chat(?:-runtime)?\.js(?:[?#]|$)/.test(script.src)
         ) || null;
     }
 

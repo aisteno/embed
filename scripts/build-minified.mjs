@@ -6,21 +6,6 @@ const sourceFiles = ["steno-chat.js", "steno-button.js", "niro.js"];
 const distDir = path.resolve("dist");
 const buildVersion = process.env.BUILD_VERSION?.trim();
 
-const headers = [
-  "/steno-chat.js",
-  "  Cache-Control: public, max-age=300, s-maxage=300, stale-while-revalidate=86400",
-  "",
-  "/steno-button.js",
-  "  Cache-Control: public, max-age=300, s-maxage=300, stale-while-revalidate=86400",
-  "",
-  "/niro.js",
-  "  Cache-Control: public, max-age=300, s-maxage=300, stale-while-revalidate=86400",
-  "",
-  "/v/*",
-  "  Cache-Control: public, max-age=31536000, immutable",
-  "",
-].join("\n");
-
 await rm(distDir, { recursive: true, force: true });
 await mkdir(distDir, { recursive: true });
 
@@ -37,9 +22,26 @@ await build({
 
 await Promise.all([
   copyFile("index.html", path.join(distDir, "index.html")),
-  writeFile(path.join(distDir, "_headers"), headers),
+  copyFile("_headers", path.join(distDir, "_headers")),
   writeFile(path.join(distDir, ".nojekyll"), ""),
 ]);
+
+// Cloudflare serves the runtime directly. Only the legacy jsDelivr release
+// replaces its chat entry point with this small, stable loader.
+await mkdir(path.join(distDir, "jsdelivr"), { recursive: true });
+await build({
+  entryPoints: ["scripts/jsdelivr-loader.js"],
+  outfile: path.join(distDir, "jsdelivr", "steno-chat.js"),
+  charset: "ascii",
+  legalComments: "none",
+  minify: true,
+  platform: "browser",
+  target: ["es2018"],
+});
+await copyFile(
+  path.join(distDir, "steno-chat.js"),
+  path.join(distDir, "jsdelivr", "steno-chat-runtime.js"),
+);
 
 if (buildVersion) {
   const versionDir = path.join(distDir, "v", buildVersion);

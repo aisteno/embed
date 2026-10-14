@@ -46,6 +46,12 @@ jobs:
       - name: Build minified release files
         run: BUILD_VERSION="${{ steps.version.outputs.version }}" npm run build:minified
 
+      - name: Verify cache and loader behavior
+        run: node --test tests/cache-policy.test.mjs
+
+      - name: Preserve purge validator before switching branches
+        run: cp scripts/validate-purge.mjs /tmp/validate-purge.mjs
+
       - name: Prepare release branch
         run: |
           git config user.name "github-actions[bot]"
@@ -53,7 +59,8 @@ jobs:
 
           # Save release files before switching branches.
           mkdir -p /tmp/release-files
-          cp dist/steno-chat.js /tmp/release-files/
+          cp dist/jsdelivr/steno-chat.js /tmp/release-files/steno-chat.js
+          cp dist/steno-chat.js /tmp/release-files/steno-chat-runtime.js
           cp dist/steno-button.js /tmp/release-files/
           cp dist/niro.js /tmp/release-files/
           cp index.html /tmp/release-files/
@@ -94,12 +101,18 @@ jobs:
             Commit: ${{ github.sha }}
           files: |
             /tmp/release-files/steno-chat.js
+            /tmp/release-files/steno-chat-runtime.js
             /tmp/release-files/steno-button.js
             /tmp/release-files/niro.js
 
       - name: Purge jsDelivr cache
         if: env.DRY_RUN == 'false'
         run: |
-          for file in steno-chat.js steno-button.js niro.js; do
-            curl -s "https://purge.jsdelivr.net/gh/aisteno/embed@latest/$file" || true
+          for alias in latest release; do
+            for file in steno-chat-runtime.js steno-chat.js steno-button.js niro.js; do
+              curl --fail-with-body --show-error --silent --retry 3 \
+                "https://purge.jsdelivr.net/gh/aisteno/embed@$alias/$file" \
+                -o /tmp/jsdelivr-purge.json
+              node /tmp/validate-purge.mjs /tmp/jsdelivr-purge.json "/gh/aisteno/embed@$alias/$file"
+            done
           done

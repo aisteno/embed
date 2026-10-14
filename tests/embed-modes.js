@@ -3,6 +3,7 @@
  */
 (async function () {
     const tests = [];
+    const throughLoader = new URLSearchParams(location.search).get('delivery') === 'loader';
     const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
     const assert = (condition, message) => {
         if (!condition) throw new Error(message);
@@ -27,10 +28,18 @@
             </style></head><body><div id="modal"><div id="slot"></div></div>
             <script>
                 window.assignedUrls = [];
+                window.runtimeUrls = [];
                 window.activeTimers = new Set();
                 const originalCreate = document.createElement.bind(document);
                 document.createElement = function(tag, options) {
                     const element = originalCreate(tag, options);
+                    if (tag.toLowerCase() === 'script') {
+                        Object.defineProperty(element, 'src', { set(url) {
+                            window.runtimeUrls.push(url);
+                            // Exercise the loader with the real runtime source.
+                            this.setAttribute('src', '/steno-chat.js');
+                        }, get() { return this.getAttribute('src'); } });
+                    }
                     if (tag.toLowerCase() === 'iframe') {
                         Object.defineProperty(element, 'src', { set(url) {
                             window.assignedUrls.push(url);
@@ -54,13 +63,16 @@
                 window.requestIdleCallback = callback => setTimeout(callback, 0);
                 Object.defineProperty(navigator, 'userAgent', { value: '${crawler ? 'ExampleBot/1.0' : 'EmbedRegressionBrowser/1.0'}' });
             <\/script>
-            <script src="/steno-chat.js" ${attributesHtml}><\/script></body></html>`;
+            <script src="${throughLoader ? '/scripts/jsdelivr-loader.js' : '/steno-chat.js'}" ${attributesHtml}><\/script></body></html>`;
         const loaded = new Promise(resolve => frame.addEventListener('load', resolve, { once: true }));
         document.getElementById('fixture').appendChild(frame);
         await loaded;
         await delay(250);
         const win = frame.contentWindow;
         const doc = frame.contentDocument;
+        if (throughLoader) {
+            assert(win.runtimeUrls.length === 1 && new URL(win.runtimeUrls[0]).searchParams.has('_steno_update'), 'Loader did not request a fresh runtime');
+        }
         return {
             frame, win, doc,
             chat: () => doc.getElementById('chat-iframe'),

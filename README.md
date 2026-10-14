@@ -122,9 +122,31 @@ The deploy output includes:
 - Optional versioned assets under `/v/<version>/...` when `BUILD_VERSION` is set
 - A `_headers` file for Cloudflare cache policy
 
+Stable root scripts use `no-cache, max-age=0, must-revalidate`. Browsers may keep
+the bytes but must check with the server before reusing them. Unchanged scripts
+can return `304 Not Modified`. Versioned `/v/<version>/` assets remain immutable.
+If the custom domain has a Cache Rule overriding response headers, scope a
+`Respect origin` browser TTL rule to the stable embed scripts. Verify the actual
+`embed.steno.ai` response after deploying; a Pages preview alone does not verify
+custom-domain rules.
+
 ### Legacy jsDelivr publishing
 
 Every push to `main` still builds and publishes the release branch, but now with minified files instead of obfuscated ones:
+
+The legacy `steno-chat.js` entry point is a small loader. It copies the host's
+`data-*` configuration and CSP nonce to `steno-chat-runtime.js` on the same CDN.
+Alias URLs such as `@latest` request the runtime with a fresh query on each page
+load, so browsers can cache the loader without retaining an old widget. Exact
+semver tags load the runtime from that same tag without a changing query.
+Releases purge both files for `@latest` and `@release`, and fail visibly if a CDN
+provider does not confirm the purge. Other version aliases retain jsDelivr's
+normal CDN expiry. Cloudflare continues serving the complete runtime directly.
+
+This does not evict old scripts already cached in visitors' browsers. The first
+rollout reaches them when their previous browser TTL expires or they reload
+without cache. CDN purges only refresh the CDN. Customers keep their existing
+script URLs; subsequent updates use this delivery policy.
 
 ```
 main (source)                          release (minified)
@@ -173,6 +195,11 @@ Set `DRY_RUN: "true"` in the workflow file to push to the `release` branch witho
 Serve this repository over HTTP and open `/tests/embed-modes.html`. The browser checks hidden and visible containers, CSS transitions, reopening, mobile panel behavior, floating positions, fullscreen sizing, resize messages, and crawler exclusion. Chat iframe navigation is redirected to a local stub by the test fixture, so these checks do not contact production or consume credits.
 
 `node --check steno-chat.js` checks JavaScript syntax without building release assets.
+
+`node --test tests/cache-policy.test.mjs` verifies loader URLs, configuration,
+pinned versions, cache headers, and purge responses without building. Open
+`/tests/embed-modes.html?delivery=loader` to run the same browser regressions
+through the loader. Its runtime URL is redirected to the local source fixture.
 
 ### Build minified assets locally
 

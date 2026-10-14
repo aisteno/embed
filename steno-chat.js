@@ -28,6 +28,49 @@
         }
     }
 
+    let cancelContainerWait = null;
+
+    function isContainerVisible(container) {
+        if (!container.isConnected || !Array.from(container.getClientRects()).some(rect => rect.width > 0 && rect.height > 0)) {
+            return false;
+        }
+
+        // A modal can keep its layout while an ancestor makes it transparent.
+        for (let element = container; element; element = element.parentElement) {
+            const style = window.getComputedStyle(element);
+            if (style.display === 'none' || style.visibility === 'hidden' ||
+                style.visibility === 'collapse' || style.contentVisibility === 'hidden' ||
+                Number.parseFloat(style.opacity) === 0) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    function waitForContainer(selector) {
+        if (cancelContainerWait) return;
+
+        // Poll computed visibility to include CSS transitions, media queries,
+        // resizing and replacement containers, which attribute observers can miss.
+        const timer = window.setInterval(() => {
+            const container = document.querySelector(selector);
+            if (container && isContainerVisible(container)) {
+                stopWaiting();
+                initStenoChat();
+            }
+        }, 200);
+
+        function stopWaiting() {
+            window.clearInterval(timer);
+            window.removeEventListener('unload', stopWaiting);
+            cancelContainerWait = null;
+        }
+
+        cancelContainerWait = stopWaiting;
+        window.addEventListener('unload', stopWaiting, { once: true });
+    }
+
     const CONFIG = {
         // this needs to be updated also in /steno-chat/src/utils/constants.ts
         ALLOWED_URLS: [
@@ -98,7 +141,10 @@
         }
 
         let chatIframe = document.getElementById('chat-iframe');
-        if (chatIframe) return;
+        if (chatIframe) {
+            if (cancelContainerWait) cancelContainerWait();
+            return;
+        }
 
         const chatId = chatScript?.getAttribute('data-id');
         const rawChatUrl = chatScript?.getAttribute('data-url') || CONFIG.DEFAULT_CHAT_URL;
@@ -120,6 +166,11 @@
         }
 
         if (isContainerMode && !chatContainer) {
+            return;
+        }
+
+        if (isContainerMode && !isContainerVisible(chatContainer)) {
+            waitForContainer(chatContainerSelector);
             return;
         }
 
@@ -198,14 +249,13 @@
             chatIframe.setAttribute('allow', 'autoplay; clipboard-write *; clipboard-read *; encrypted-media *; fullscreen; picture-in-picture; microphone *;');
             chatIframe.setAttribute('scrolling', 'no');
 
-            requestAnimationFrame(() => {
-                if (isContainerMode) {
-                    chatContainer.appendChild(chatIframe);
-                    return;
-                }
-
-                document.body.appendChild(chatIframe);
-            });
+            if (isContainerMode) {
+                // Mount in the same task as the visibility check, so a modal
+                // cannot close between checking it and navigating the iframe.
+                chatContainer.appendChild(chatIframe);
+            } else {
+                requestAnimationFrame(() => document.body.appendChild(chatIframe));
+            }
 
             const messageHandler = event => {
                 if (!CONFIG.ALLOWED_URLS.includes(event.origin)) return;

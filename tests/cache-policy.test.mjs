@@ -24,15 +24,19 @@ function load(src, now = 100) {
     return inserted;
 }
 
-test('cached alias loader requests a fresh runtime on the existing CDN host', () => {
+test('alias loader reuses the runtime URL within ten minutes and rotates at the boundary', () => {
     for (const alias of ['latest', 'release', '3', '3.2']) {
         const src = `https://cdn.jsdelivr.net/gh/aisteno/embed@${alias}/steno-chat.js?custom=value`;
         const first = new URL(load(src).src);
-        const second = new URL(load(src, 101).src);
+        const sameWindow = new URL(load(src, 599999).src);
+        const nextWindow = new URL(load(src, 600000).src);
         assert.equal(first.origin, 'https://cdn.jsdelivr.net');
         assert.equal(first.pathname, `/gh/aisteno/embed@${alias}/steno-chat-runtime.js`);
         assert.equal(first.searchParams.get('custom'), 'value');
-        assert.notEqual(first.href, second.href);
+        assert.equal(first.href, sameWindow.href);
+        assert.equal(first.searchParams.get('_steno_update'), '0');
+        assert.notEqual(first.href, nextWindow.href);
+        assert.equal(nextWindow.searchParams.get('_steno_update'), '1');
     }
 });
 
@@ -53,10 +57,10 @@ test('loader preserves embed configuration and CSP nonce without copying stale i
     assert.equal(runtime.integrity, undefined);
 });
 
-test('stable Pages entry points revalidate; pinned version paths remain immutable', async () => {
+test('stable Pages entry points cache for ten minutes; pinned version paths remain immutable', async () => {
     const headers = await readFile(new URL('../_headers', import.meta.url), 'utf8');
     for (const file of ['steno-chat.js', 'steno-button.js', 'niro.js']) {
-        assert.ok(headers.includes(`/${file}\n  Cache-Control: public, no-cache, max-age=0, must-revalidate`));
+        assert.ok(headers.includes(`/${file}\n  Cache-Control: public, max-age=600, must-revalidate`));
     }
     assert.ok(headers.includes('/v/*\n  Cache-Control: public, max-age=31536000, immutable'));
     assert.ok(!headers.includes('stale-while-revalidate'));

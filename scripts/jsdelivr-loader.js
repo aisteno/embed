@@ -1,5 +1,5 @@
-/* The legacy entry point stays cacheable on jsDelivr. Resolve the runtime on
- * each page load so a cached loader does not hold customers on an old widget.
+/* The legacy entry point stays cacheable on jsDelivr. Rotate the runtime URL
+ * every ten minutes so repeat page loads can use the browser cache.
  * Keep the same CDN host to respect customers' existing script-src policies.
  */
 (function () {
@@ -9,9 +9,9 @@
     const url = new URL('steno-chat-runtime.js', script.src);
     url.search = new URL(script.src).search;
     // Exact releases must remain reproducible. Alias URLs rely on release-time
-    // CDN purging, plus a fresh browser URL for every load.
+    // CDN purging, plus a new browser URL every ten minutes.
     if (!/@\d+\.\d+\.\d+(?:-[\w.-]+)?\//.test(url.pathname)) {
-        url.searchParams.set('_steno_update', String(Date.now()));
+        url.searchParams.set('_steno_update', String(Math.floor(Date.now() / 600000)));
     }
 
     const runtime = document.createElement('script');

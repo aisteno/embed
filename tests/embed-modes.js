@@ -71,7 +71,7 @@
         const win = frame.contentWindow;
         const doc = frame.contentDocument;
         if (throughLoader) {
-            assert(win.runtimeUrls.length === 1 && new URL(win.runtimeUrls[0]).searchParams.has('_steno_update'), 'Loader did not request a fresh runtime');
+            assert(win.runtimeUrls.length === 1 && new URL(win.runtimeUrls[0]).searchParams.has('_steno_update'), 'Loader did not request a runtime with the update window');
         }
         return {
             frame, win, doc,
